@@ -1,5 +1,4 @@
-import urllib
-from urllib.request import urlopen
+import urllib.request
 from bs4 import BeautifulSoup
 import re
 import os
@@ -7,10 +6,14 @@ import imghdr
 import time
 
 
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) \
-    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
-}
+
+user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
+headers = { 'User-Agent' : user_agent }  
+
+
+
+
+
 index = 1
 stop = False
 next_url = "http://jandan.net/ooxx"
@@ -23,7 +26,7 @@ if not os.path.exists(".\\jiandan_pic"):
 while True:
 
     webRequest = urllib.request.Request(next_url, headers=headers)
-    html = urlopen(webRequest)
+    html = urllib.request.urlopen(webRequest)
 
     time.sleep(3)
 
