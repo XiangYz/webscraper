@@ -30,7 +30,6 @@ else:
 driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
 
 
-
 while True:
 
     #webRequest = urllib.request.Request(next_url, headers=headers)
@@ -56,32 +55,34 @@ while True:
                 stop = True
                 break
         
-        img_item = item.find("div", {"class":"row"})
-        img_item = img_item.find("div", {"class":"text"})
-        img_item = img_item.find("img")
-        img_item = img_item.attrs["src"]
-        if not img_item:
-            continue
-        
-        pos = img_item.rfind(".gif")
-        if pos > 0:
-            img_item = item.find("img").attrs["org_src"]
-            if not img_item:
+        img_items = item.find("div", {"class":"row"})
+        img_items = img_items.find("div", {"class":"text"})
+        img_items = img_items.findAll("img")
+        for img_item in img_items:
+            src = img_item.attrs["src"]
+            if not src:
                 continue
         
-        file_name = "jiandan_" + str(index)
-        file_path = os.path.join(".\\jiandan_pic", file_name)
-        content = urlopen("http:" + img_item).read()
-        if not content:
-            continue
-        imgtype = imghdr.what('', h = content)
-        if not imgtype:
-            continue
+            pos = src.rfind(".gif")
+            if pos > 0:
+                org_src = img_item.attrs["org_src"]
+                if not org_src:
+                    continue
+                src = org_src
+        
+            file_name = "jiandan_" + str(index)
+            file_path = os.path.join(".\\jiandan_pic", file_name)
+            content = urlopen("http:" + src).read()
+            if not content:
+                continue
+            imgtype = imghdr.what('', h = content)
+            if not imgtype:
+                continue
 
-        with open(file_path + "." + imgtype, "wb") as picfile:
-            picfile.write(content)
+            with open(file_path + "." + imgtype, "wb") as picfile:
+                picfile.write(content)
 
-        index = index + 1
+            index = index + 1
 
     if not stop:
         next_url = bsObj.find("div", {"class":"cp-pagenavi"}).find("a", {"class":"previous-comment-page"}).attrs["href"]
