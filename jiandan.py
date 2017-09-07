@@ -1,5 +1,7 @@
-import urllib.request
+import urllib
+from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from selenium import webdriver
 import re
 import os
 import imghdr
@@ -7,13 +9,10 @@ import time
 
 
 
-user_agent = 'Mozilla/4.0 (compatible; MSIE 5.5; Windows NT)'  
-headers = { 'User-Agent' : user_agent }  
-
-
-
-
-
+headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) \
+    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
+}
 index = 1
 stop = False
 next_url = "http://jandan.net/ooxx"
@@ -22,11 +21,23 @@ next_url = "http://jandan.net/ooxx"
 
 if not os.path.exists(".\\jiandan_pic"):
     os.mkdir("jiandan_pic")
+else:
+    for f in os.listdir(".\\jiandan_pic"):
+        path = os.path.join(".\\jiandan_pic", f)
+        os.remove(path)
+
+
+driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
+
+
 
 while True:
 
-    webRequest = urllib.request.Request(next_url, headers=headers)
-    html = urllib.request.urlopen(webRequest)
+    #webRequest = urllib.request.Request(next_url, headers=headers)
+    #html = urlopen(webRequest)
+
+    driver.get(next_url)
+    html = driver.page_source
 
     time.sleep(3)
 
@@ -41,12 +52,11 @@ while True:
             break
         elif pub_time_list[1].lower() == "days":
             days = pub_time_list[0][1:]
-            if int(days) >= 2:
+            if int(days) >= 1:
                 stop = True
                 break
         
         img_item = item.find("div", {"class":"row"})
-        print(img_item)
         img_item = img_item.find("div", {"class":"text"})
         img_item = img_item.find("img")
         img_item = img_item.attrs["src"]
@@ -61,7 +71,7 @@ while True:
         
         file_name = "jiandan_" + str(index)
         file_path = os.path.join(".\\jiandan_pic", file_name)
-        content = urllib.urlopen("http:" + img_item).read()
+        content = urlopen("http:" + img_item).read()
         if not content:
             continue
         imgtype = imghdr.what('', h = content)
@@ -77,3 +87,5 @@ while True:
         next_url = bsObj.find("div", {"class":"cp-pagenavi"}).find("a", {"class":"previous-comment-page"}).attrs["href"]
         if not next_url:
             break
+    else:
+        break
