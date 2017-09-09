@@ -19,11 +19,11 @@ next_url = "http://jandan.net/ooxx"
 
 
 
-if not os.path.exists(".\\jiandan_pic"):
+if not os.path.exists("./jiandan_pic"):
     os.mkdir("jiandan_pic")
 else:
-    for f in os.listdir(".\\jiandan_pic"):
-        path = os.path.join(".\\jiandan_pic", f)
+    for f in os.listdir("./jiandan_pic"):
+        path = os.path.join("./jiandan_pic", f)
         os.remove(path)
 
 
@@ -36,10 +36,8 @@ while True:
     #html = urlopen(webRequest)
 
     driver.get(next_url)
-    html = driver.page_source
-
     time.sleep(3)
-
+    html = driver.page_source
     bsObj = BeautifulSoup(html, "html.parser")
 
     list_item = bsObj.find("ol", {"class":"commentlist"}).findAll("li")
@@ -51,7 +49,7 @@ while True:
             break
         elif pub_time_list[1].lower() == "days":
             days = pub_time_list[0][1:]
-            if int(days) >= 1:
+            if int(days) >= 6:
                 stop = True
                 break
         
@@ -71,7 +69,7 @@ while True:
                 src = org_src
         
             file_name = "jiandan_" + str(index)
-            file_path = os.path.join(".\\jiandan_pic", file_name)
+            file_path = os.path.join("./jiandan_pic", file_name)
             content = urlopen("http:" + src).read()
             if not content:
                 continue
@@ -90,3 +88,5 @@ while True:
             break
     else:
         break
+
+driver.close()
