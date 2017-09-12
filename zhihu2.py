@@ -37,8 +37,9 @@ def login(driver):
 
 def crawl_pages(driver, save_path):
     target_url = "https://www.zhihu.com/question/37787176"
+    #target_url = "https://www.zhihu.com/question/37787176/answer/162895010"
     driver.get(target_url)
-    time.sleep(3)
+    time.sleep(5)
     bsObj = BeautifulSoup(driver.page_source, "html.parser")
     imgs = bsObj.findAll("img", {"src":re.compile("(jpg|jpeg|png)$")})
     index = 1
