@@ -1,5 +1,5 @@
 from multiprocessing import Process, Queue
-import os, time, random
+import os, time, random, re
 
 
 def write(q, a, b):
@@ -20,6 +20,14 @@ def fun(arg):
     print(arg[0], arg[1], arg[2])
 
 if __name__ == '__main__':
+
+    test_str = "www.jiandan.com/page-99#"
+    match = re.match('www', test_str)
+    print(match.group())
+    match = re.match('.*page-([0-9]+)', test_str)
+    print(match.group(1))
+
+'''
     q = Queue()
     pw = Process(target = write, args = (q, 1, 2))  #不是tuple传进去的，是位置参数
     pr = Process(target = read, args = (q, 3, 4))
@@ -30,6 +38,6 @@ if __name__ == '__main__':
     
     fun((1, 2, 3))
 
-
+'''
 
     
