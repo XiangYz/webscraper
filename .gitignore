@@ -105,3 +105,11 @@ ENV/
 
 jiandan_pic/
 zhihu_pic/
+
+testing.txt
+requirements.txt
+
+*.jpg
+*.jpeg
+*.png
+*.bmp
