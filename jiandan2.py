@@ -14,7 +14,7 @@ import time
 import logging
 
 
-pages_to_be_crawled = 4
+pages_to_be_crawled = 6
 
 
 def handle_first_page(url, process_pool, dir):

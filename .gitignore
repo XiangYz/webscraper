@@ -106,8 +106,9 @@ ENV/
 jiandan_pic/
 zhihu_pic/
 
-testing.txt
-requirements.txt
+#testing.txt
+#requirements.txt
+*.txt
 
 *.jpg
 *.jpeg

@@ -26,7 +26,7 @@ def init_dir(dirname):
             os.remove(path)
 
 def login(driver):
-    login_url = "https://www.zhihu.com/#signin"
+    login_url = "https://www.zhihu.com/login/phone_num"
     driver.get(login_url)
     WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//input[@type='password']")))
     driver.find_element_by_xpath("//input[@type='text]").send_keys("18666219953")
@@ -64,7 +64,8 @@ def save_pic(content, path, filename, filetype):
 
 
 
-driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
+#driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
+driver = webdriver.Chrome(executable_path="./chromedriver")
 
 init_dir("./zhihu_pic")
 #login(driver)

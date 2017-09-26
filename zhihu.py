@@ -20,21 +20,34 @@ else:
 
 
 headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) \
-    AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
+    'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Encoding' : 'gzip, deflate, sdch, br',
+    'Accept-Language' : 'zh-CN,zh;q=0.8',
+    'Connection' : 'keep-alive',
+    'DNT' : '1',
+    'Host' : 'www.zhihu.com',
+    'Upgrade-Insecure-Requests' : '1',
+    'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
+
 session = requests.Session()
+session.headers = headers
 
-params = {'username':'18666219953', 'password':'5555YDYHHGXX'}
-s = session.post("https://www.zhihu.com/#signin", params)
+login_page = session.get("https://www.zhihu.com/login/email").text
+login_page_bs = BeautifulSoup(login_page, "html.parser")
+xsrf = login_page_bs.find("input", {"name":"_xsrf"}).attrs['value']
 
-'''
-print("Cookie is set to:")
-print(s.cookies.get_dict())
-print("---------")
-print("Going to profile page...")
-'''
 
+params = {
+    'phone_num':'18666219953', 'password':'5555YDYHHGXX',
+    'remember_me':'true',
+    '_xsrf':xsrf
+
+}
+s = session.post("https://www.zhihu.com/#signin", data = params)
+
+
+session.cookies = s.cookies
 
 
 s = session.get("https://www.zhihu.com/question/37787176", headers = headers)
