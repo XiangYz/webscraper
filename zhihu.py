@@ -9,20 +9,18 @@ import time
 import requests
 
 
-
-
-if not os.path.exists("./zhihu_pic"):
-    os.mkdir("zhihu_pic")
-else:
-    for f in os.listdir("./zhihu_pic"):
-        path = os.path.join("./zhihu_pic", f)
-        os.remove(path)
+def clear_dir():
+    if not os.path.exists("./zhihu_pic"):
+        os.mkdir("zhihu_pic")
+    else:
+        for f in os.listdir("./zhihu_pic"):
+            path = os.path.join("./zhihu_pic", f)
+            os.remove(path)
 
 
 headers = {
     'Accept' : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Encoding' : 'gzip, deflate, sdch, br',
-    'Accept-Language' : 'zh-CN,zh;q=0.8',
     'Connection' : 'keep-alive',
     'DNT' : '1',
     'Host' : 'www.zhihu.com',
@@ -31,27 +29,37 @@ headers = {
 }
 
 session = requests.Session()
-session.headers = headers
-
-login_page = session.get("https://www.zhihu.com/login/email").text
-login_page_bs = BeautifulSoup(login_page, "html.parser")
-xsrf = login_page_bs.find("input", {"name":"_xsrf"}).attrs['value']
 
 
-params = {
-    'phone_num':'18666219953', 'password':'5555YDYHHGXX',
-    'remember_me':'true',
-    '_xsrf':xsrf
+def login():
 
-}
-s = session.post("https://www.zhihu.com/#signin", data = params)
+    login_page = session.get("https://www.zhihu.com/login/phone_num", headers = {'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}).text
+    login_page_bs = BeautifulSoup(login_page, "html.parser")
+    xsrf = login_page_bs.find("input", {"name":"_xsrf"}).attrs['value']
 
 
-session.cookies = s.cookies
+    params = {
+        '_xsrf':xsrf,
+        'password':'5555YDYHHGXX',
+        'captcha_type':'cn',
+        'phone_num':'18666219953',
+    }
+
+    #session.headers = headers
+    r = session.post("https://www.zhihu.com/login/phone_num", data = params)
+    return r
+
+print(login())
+
+my_page = session.get("https://www.zhihu.com/people/Xiangyuzhe/following")
+my_page_bs = BeautifulSoup(my_page.text, "html.parser")
+num_of_I_following = int(my_page_bs.find("div", {"class":"NumberBoard-value"}).text)
+print(num_of_I_following)
 
 
-s = session.get("https://www.zhihu.com/question/37787176", headers = headers)
-bsObj = BeautifulSoup(s.text, "html.parser")
+'''
+res = session.get("https://www.zhihu.com/question/37787176", headers = headers)
+bsObj = BeautifulSoup(res.text, "html.parser")
 #print(bsObj)
 imgs = bsObj.findAll("img", {"src":re.compile("(jpg|jpeg|png)$")})
 index = 1
@@ -71,5 +79,5 @@ for img in imgs:
 
     print("img " + str(index) + " finished")
     index = index + 1
-
+'''
 

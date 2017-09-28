@@ -37,11 +37,18 @@ def login(driver):
 
 def crawl_pages(driver, save_path):
     target_url = "https://www.zhihu.com/question/37787176"
-    #target_url = "https://www.zhihu.com/question/37787176/answer/162895010"
     driver.get(target_url)
+    
+    '''
+    btn_more = WebDriverWait(driver, 3).until(
+        EC.visibility_of_element_located((By.XPATH, "//button[@class='Button QuestionMainAction']"))
+    )
+    btn_more.click()
+    '''
     time.sleep(5)
+
     bsObj = BeautifulSoup(driver.page_source, "html.parser")
-    imgs = bsObj.findAll("img", {"src":re.compile("(jpg|jpeg|png)$")})
+    imgs = bsObj.findAll("img", {"class":"origin_image zh-lightbox-thumb lazy"})
     index = 1
     for img in imgs:
         img_url = img.attrs["src"]

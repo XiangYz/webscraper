@@ -14,7 +14,7 @@ import time
 import logging
 
 
-pages_to_be_crawled = 6
+pages_to_be_crawled = 8
 
 
 def handle_first_page(url, process_pool, dir):
@@ -68,7 +68,8 @@ def handle_first_page(url, process_pool, dir):
 
 def handle_other_pages(curr_url, page_num, dir):
 
-    driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
+    #driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
+    driver = webdriver.Chrome(executable_path="./chromedriver")
 
     driver.get(curr_url)
 
