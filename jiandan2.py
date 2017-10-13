@@ -14,7 +14,7 @@ import time
 import logging
 
 
-pages_to_be_crawled = 8
+pages_to_be_crawled = 15
 
 
 def handle_first_page(url, process_pool, dir):
@@ -127,6 +127,7 @@ def get_pic_in_current_page(bsObj, page_num, dir):
                 if not org_src:
                     continue
                 src = org_src
+
             # 采用urlopen获得图片数据
             # content = urlopen("http:" + src).read()
             # 采用requests获得图片数据
