@@ -115,3 +115,7 @@ zhihu_pic/
 *.png
 *.bmp
 *.exe
+*.xls
+*.doc
+*.xlsx
+*.docx
