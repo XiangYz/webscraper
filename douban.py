@@ -38,14 +38,15 @@ class Mongo(object):
         if url is None or url is '':
             return
         if self.is_url_in_coll(coll, url):
-            return
+            return False
         self.add_url_direct(coll, url)
+        return True
 
     def is_empty(self, coll):
         return coll.find().count() == 0
 
     def del_url_from_coll(self, coll, url):
-        coll.remove(url)
+        coll.remove({'url':url})
 
     def del_all_urls_from_coll(self, coll):
         coll.remove()
@@ -53,15 +54,16 @@ class Mongo(object):
     #外部接口
     def add_new_url(self, url):
         if self.is_url_in_coll(self.oldUrlsColl, url):
-            return
-        self.add_url_checked(self.newUrlsColl, url)
+            return False
+        return self.add_url_checked(self.newUrlsColl, url)
+    
 
     def get_new_url(self):
         if self.is_empty(self.newUrlsColl):
             return ''
         url = self.newUrlsColl.find_one()
-        self.del_url_from_coll(self.newUrlsColl, url)
-        self.add_url_checked(self.oldUrlsColl, url)
+        self.del_url_from_coll(self.newUrlsColl, url['url'])
+        self.add_url_checked(self.oldUrlsColl, url['url'])
 
         return url['url']
 
@@ -71,18 +73,11 @@ class Mongo(object):
         self.del_all_urls_from_coll(self.bookColl)
 
     def save_one_book(self, book):
-        self.bookColl.insert(book)
+        if self.bookColl.find(book).count() == 0:
+            self.bookColl.insert(book)
 
     def output_to_xls(self):
-        '''
-        excelFile = unicode('GoodBooks.xls', 'utf8')
-        wbk = xlwt.Workbook()
-        sheet = wbk.add_sheet('douban', cell_overwrite_ok = True)
-        headList = ['No.', 'name', 'score', 'price', 'press', 'author', 'url']
-        row_index = 0
-        for i in range(0,len(headList)):
-            sheet.write(0, i, headList[i], set_style('Times New Roman', 220, True))
-        '''
+ 
         allDatas = self.bookColl.find()
 
         w = xlwt.Workbook() #创建一个工作簿
@@ -99,16 +94,27 @@ class Mongo(object):
         ws.write(0,9,u'url')
         row = 1
         for data in allDatas:
+            print("------start to write to xls.")
             ws.write( row, 0, row )
+            if not data.has_key('name'):
+                continue
             ws.write( row, 1, data['name'] )
-            ws.write( row, 2, float(data['rate']) )
-            ws.write( row, 3, data['author'] )
-            ws.write( row, 4, data['price'] )
-            ws.write( row, 5, data['press'] )
-            ws.write( row, 6, data['ym'] )
-            ws.write( row, 7, data['pages'] )
-            ws.write( row, 8, data['ISBN'] )
-            ws.write( row, 9, data['url'] )
+            if data.has_key('rate'):
+                ws.write( row, 2, data['rate'] )
+            if data.has_key('author'):
+                ws.write( row, 3, data['author'] )
+            if data.has_key('price'):
+                ws.write( row, 4, data['price'] )
+            if data.has_key('press'):
+                ws.write( row, 5, data['press'] )
+            if data.has_key('ym'):
+                ws.write( row, 6, data['ym'] )
+            if data.has_key('pages'):
+                ws.write( row, 7, data['pages'] )
+            if data.has_key('ISBN'):
+                ws.write( row, 8, data['ISBN'] )
+            if data.has_key('url'):
+                ws.write( row, 9, data['url'] )
             row += 1
         w.save('GoodBooks.xls') #保存
 
@@ -131,9 +137,14 @@ class Douban(object):
         if name:
             book['name'] = name[0].get_text()
 
-        book['rate'] = bsobj.find("strong", {"class":re.compile("rating_num"), "property":"v:average"}).get_text()
+        rate = bsobj.findAll("strong", {"class":re.compile("rating_num"), "property":"v:average"})
+        if rate:
+            book['rate'] = rate[0].get_text()
     
         infoobj = bsobj.find("div", {"id":"info"})
+        if not infoobj:
+            print("-----no info")
+            return book
 
         author = infoobj.findAll("span", text=re.compile("作者"))  #这个地方不能用find，真奇怪
         if author:
@@ -173,7 +184,6 @@ class Douban(object):
                 ele = re.sub(r'\s+.*$', '', ele.get_text())
                 book['translator'].append(ele)
 
-
         print (book)
 
         return book
@@ -189,25 +199,37 @@ class Douban(object):
             next_url = self.mongo.get_new_url()
             print(next_url)
             if next_url == '':
+                print('all books are crawled.')
                 break
 
             #爬取当前页面
-            page = self.session.get(next_url, headers = self.headers)
+            while True:
+                try:
+                    page = self.session.get(next_url, headers = self.headers)
+                    break
+                except:
+                    print('-----get page except.')
+                    time.sleep(3)
+                    continue
+
             bsobj = BeautifulSoup(page.content, "html.parser", from_encoding='utf-8')
             book = self.crawl_one_page(bsobj)
-            book['url'] = next_url
-            #存储书籍信息
-            self.mongo.save_one_book(book)
+            if book:
+                book['url'] = next_url
+                #存储书籍信息
+                self.mongo.save_one_book(book)
+                cnt = cnt + 1
             time.sleep(random.uniform(0.1, 0.3))
             #寻找关联url放到待爬取url集合中
             rel_imgs = bsobj.findAll("img", {"class":"m_sub_img"})
+            if not rel_imgs:
+                continue
             for img in rel_imgs:
                 rel_url = img.parent.attrs['href']
                 self.mongo.add_new_url(rel_url)
             
-            cnt = cnt + 1
-            if cnt == 3:
-                break
+            if cnt == 100:
+                pass
         
         self.mongo.output_to_xls()
 
