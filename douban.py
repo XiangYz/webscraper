@@ -94,26 +94,33 @@ class Mongo(object):
         ws.write(0,9,u'url')
         row = 1
         for data in allDatas:
-            print("------start to write to xls.")
+            print("------write to xls.")
             ws.write( row, 0, row )
-            if not data.has_key('name'):
+            if not 'name' in data:
                 continue
             ws.write( row, 1, data['name'] )
-            if data.has_key('rate'):
+            if 'rate' in data:
                 ws.write( row, 2, data['rate'] )
-            if data.has_key('author'):
+            
+            if 'author' in data:
                 ws.write( row, 3, data['author'] )
-            if data.has_key('price'):
+            
+            if 'price' in data:
                 ws.write( row, 4, data['price'] )
-            if data.has_key('press'):
+            
+            if 'press' in data:
                 ws.write( row, 5, data['press'] )
-            if data.has_key('ym'):
+            
+            if 'ym' in data:
                 ws.write( row, 6, data['ym'] )
-            if data.has_key('pages'):
+            
+            if 'pages' in data:
                 ws.write( row, 7, data['pages'] )
-            if data.has_key('ISBN'):
+            
+            if 'ISBN' in data:
                 ws.write( row, 8, data['ISBN'] )
-            if data.has_key('url'):
+            
+            if 'url' in data:
                 ws.write( row, 9, data['url'] )
             row += 1
         w.save('GoodBooks.xls') #保存
@@ -129,6 +136,18 @@ class Douban(object):
 
         self.mongo = Mongo()
         
+    def logon(self, username, passwd):
+        # source=None&redir=https://www.douban.com&form_email=18666219953&form_password=5555WJXBH&login=登录
+        params = {
+            'source':'None',
+            'redir':'https://www.douban.com',
+            'form_email':username,
+            'form_password':passwd,
+            'login':u'登录'
+        }
+        r = self.session.post("https://accounts.douban.com/login", data = params)
+        
+        return r.status_code
     
     def crawl_one_page(self, bsobj):
         book = {}
@@ -189,7 +208,8 @@ class Douban(object):
         return book
     
     def start_crawl(self):
-
+        rcode = self.logon('18666219953', '5555WJXBH')
+        print('-----login ret: ' + str(rcode))
         self.mongo.init_all_colls()
         cnt = 0
         #将起始url放入待爬取集合内
@@ -209,7 +229,7 @@ class Douban(object):
                     break
                 except:
                     print('-----get page except.')
-                    time.sleep(3)
+                    time.sleep(random.uniform(3, 5))
                     continue
 
             bsobj = BeautifulSoup(page.content, "html.parser", from_encoding='utf-8')
@@ -219,7 +239,7 @@ class Douban(object):
                 #存储书籍信息
                 self.mongo.save_one_book(book)
                 cnt = cnt + 1
-            time.sleep(random.uniform(0.1, 0.3))
+            time.sleep(random.uniform(0.3, 0.5))
             #寻找关联url放到待爬取url集合中
             rel_imgs = bsobj.findAll("img", {"class":"m_sub_img"})
             if not rel_imgs:
@@ -228,8 +248,8 @@ class Douban(object):
                 rel_url = img.parent.attrs['href']
                 self.mongo.add_new_url(rel_url)
             
-            if cnt == 100:
-                pass
+            if cnt == 200:
+                break
         
         self.mongo.output_to_xls()
 
