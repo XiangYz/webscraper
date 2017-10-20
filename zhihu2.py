@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -38,20 +39,29 @@ def login(driver):
 def crawl_pages(driver, save_path):
     target_url = "https://www.zhihu.com/question/37787176"
     driver.get(target_url)
-    
+    time.sleep(1)
     '''
     btn_more = WebDriverWait(driver, 3).until(
         EC.visibility_of_element_located((By.XPATH, "//button[@class='Button QuestionMainAction']"))
     )
     btn_more.click()
     '''
-    time.sleep(5)
+
+    while True:
+        try:
+            btn = driver.find_element_by_xpath("//button[@class='Button QuestionMainAction']")
+            actions = ActionChains(driver)
+            actions.move_to_element(btn)
+            actions.click()
+            actions.perform()
+        except:
+            break
 
     bsObj = BeautifulSoup(driver.page_source, "html.parser")
-    imgs = bsObj.findAll("img", {"class":"origin_image zh-lightbox-thumb lazy"})
+    imgs = bsObj.findAll("img", {"class":re.compile("origin_image")})
     index = 1
     for img in imgs:
-        img_url = img.attrs["src"]
+        img_url = img.attrs["data-actualsrc"]
         file_name = "zhihu_" + str(index)
         content = urlopen(img_url).read()
         if not content:

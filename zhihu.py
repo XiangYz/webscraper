@@ -28,6 +28,8 @@ headers = {
     'User-Agent' : 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
 }
 
+
+clear_dir()
 session = requests.Session()
 
 
@@ -51,13 +53,14 @@ def login():
 
 print(login())
 
+'''
 my_page = session.get("https://www.zhihu.com/people/Xiangyuzhe/following")
 my_page_bs = BeautifulSoup(my_page.text, "html.parser")
 num_of_I_following = int(my_page_bs.find("div", {"class":"NumberBoard-value"}).text)
 print(num_of_I_following)
-
-
 '''
+
+
 res = session.get("https://www.zhihu.com/question/37787176", headers = headers)
 bsObj = BeautifulSoup(res.text, "html.parser")
 #print(bsObj)
@@ -79,5 +82,5 @@ for img in imgs:
 
     print("img " + str(index) + " finished")
     index = index + 1
-'''
+
 

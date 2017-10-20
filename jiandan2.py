@@ -14,13 +14,13 @@ import time
 import logging
 
 
-pages_to_be_crawled = 15
+pages_to_be_crawled = 10
 
 
 def handle_first_page(url, process_pool, dir):
 
     driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
-
+    #driver = webdriver.Chrome(executable_path="./chromedriver")
     driver.get(url)
 
     #time.sleep(3)

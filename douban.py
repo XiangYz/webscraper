@@ -11,6 +11,7 @@ import pymongo
 import sys
 import xlwt
 import xlrd
+from xlutils.copy import copy
 import random
 
 class Mongo(object):
@@ -72,27 +73,39 @@ class Mongo(object):
         self.del_all_urls_from_coll(self.oldUrlsColl)
         self.del_all_urls_from_coll(self.bookColl)
 
+    def del_book_coll(self):
+        self.del_all_urls_from_coll(self.bookColl)
+
     def save_one_book(self, book):
         if self.bookColl.find(book).count() == 0:
             self.bookColl.insert(book)
 
     def output_to_xls(self):
  
-        allDatas = self.bookColl.find()
+        if not os.path.exists("GoodBooks.xls"):
+            w = xlwt.Workbook() #创建一个工作簿
+            ws = w.add_sheet('douban') #创建一个工作表
+            ws.write(0,0,u'序号')
+            ws.write(0,1,u'书名')
+            ws.write(0,2,u'评分')
+            ws.write(0,3,u'作者')
+            ws.write(0,4,u'价格')
+            ws.write(0,5,u'出版社')
+            ws.write(0,6,u'出版年')
+            ws.write(0,7,u'页数')
+            ws.write(0,8,u'ISBN')
+            ws.write(0,9,u'url')
+            row = 1
+        else:
+            oldwb = xlrd.open_workbook("GoodBooks.xls")
+            row = oldwb.sheets()[0].nrows
+            w = copy(oldwb)
+            ws = w.get_sheet(0)
+            
 
-        w = xlwt.Workbook() #创建一个工作簿
-        ws = w.add_sheet('douban') #创建一个工作表
-        ws.write(0,0,u'序号')
-        ws.write(0,1,u'书名')
-        ws.write(0,2,u'评分')
-        ws.write(0,3,u'作者')
-        ws.write(0,4,u'价格')
-        ws.write(0,5,u'出版社')
-        ws.write(0,6,u'出版年')
-        ws.write(0,7,u'页数')
-        ws.write(0,8,u'ISBN')
-        ws.write(0,9,u'url')
-        row = 1
+        print("current row: " + str(row))
+        allDatas = self.bookColl.find()
+        
         for data in allDatas:
             print("------write to xls.")
             ws.write( row, 0, row )
@@ -123,7 +136,10 @@ class Mongo(object):
             if 'url' in data:
                 ws.write( row, 9, data['url'] )
             row += 1
+
+
         w.save('GoodBooks.xls') #保存
+        self.del_book_coll()
 
 
 class Douban(object):
@@ -217,12 +233,13 @@ class Douban(object):
         while True:
             #从待爬取集合内取出一个url
             next_url = self.mongo.get_new_url()
-            print(next_url)
+            print(str(cnt + 1) + " : " + next_url)
             if next_url == '':
                 print('all books are crawled.')
                 break
 
             #爬取当前页面
+            get_cnt = 0
             while True:
                 try:
                     page = self.session.get(next_url, headers = self.headers)
@@ -230,15 +247,22 @@ class Douban(object):
                 except:
                     print('-----get page except.')
                     time.sleep(random.uniform(3, 5))
+                    get_cnt = get_cnt + 1
+                    if get_cnt == 10:
+                        break
                     continue
+            if get_cnt == 10:
+                break
 
             bsobj = BeautifulSoup(page.content, "html.parser", from_encoding='utf-8')
             book = self.crawl_one_page(bsobj)
-            if book:
-                book['url'] = next_url
-                #存储书籍信息
-                self.mongo.save_one_book(book)
-                cnt = cnt + 1
+            if not book:
+                break
+            #if book:
+            book['url'] = next_url
+            #存储书籍信息
+            self.mongo.save_one_book(book)
+            cnt = cnt + 1
             time.sleep(random.uniform(0.3, 0.5))
             #寻找关联url放到待爬取url集合中
             rel_imgs = bsobj.findAll("img", {"class":"m_sub_img"})
@@ -248,12 +272,16 @@ class Douban(object):
                 rel_url = img.parent.attrs['href']
                 self.mongo.add_new_url(rel_url)
             
-            if cnt == 200:
-                break
+            if cnt % 10 == 0:
+                self.mongo.output_to_xls()
+                
+
         
         self.mongo.output_to_xls()
 
 if __name__ == '__main__':
+    if os.path.exists("GoodBooks.xls"):
+        os.remove("GoodBooks.xls")
     start_url = "https://book.douban.com/subject/1477390/"
     douban_spider = Douban(start_url)
     douban_spider.start_crawl()
