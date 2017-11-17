@@ -128,10 +128,13 @@ def get_pic_in_current_page(bsObj, page_num, dir):
                     continue
                 src = org_src
 
+
             # 采用urlopen获得图片数据
             # content = urlopen("http:" + src).read()
             # 采用requests获得图片数据
-            content = requests.get("http:" + src, timeout=10).content
+            if src.find('http:') < 0:
+                src = 'http:' + src
+            content = requests.get(src, timeout=10).content
             if not content:
                 #logging.info("url: http:" + src + " get failed")
                 continue
