@@ -14,13 +14,13 @@ import time
 import logging
 
 
-pages_to_be_crawled = 10
+pages_to_be_crawled = 4
 
 
 def handle_first_page(url, process_pool, dir):
 
-    driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
-    #driver = webdriver.Chrome(executable_path="./chromedriver")
+    #driver = webdriver.PhantomJS(executable_path = '../phantomjs/bin/phantomjs.exe')
+    driver = webdriver.Chrome(executable_path="./chromedriver")
     driver.get(url)
 
     #time.sleep(3)
@@ -127,6 +127,8 @@ def get_pic_in_current_page(bsObj, page_num, dir):
                 if not org_src:
                     continue
                 src = org_src
+            # else:
+            #     continue
 
 
             # 采用urlopen获得图片数据
@@ -169,12 +171,13 @@ if __name__ == '__main__':
     }
 
     start_url = "http://jandan.net/ooxx"
+    #start_url = "http://jandan.net/ooxx/page-129#comments"
     pic_dir = "./jiandan_pic"
 
     init_dir(pic_dir)
 
     #logging.basicConfig(level = logging.info)
 
-    process_pool = Pool(4)
+    process_pool = Pool(2)
     handle_first_page(start_url, process_pool, pic_dir)
     #logging.info("DONE")
